@@ -1,18 +1,8 @@
 
-import Hero from "@/components/Hero";
-import Features from "@/components/Features";
-import Navigation from "@/components/Navigation";
-import Footer from "@/components/Footer";
+import Election from "./Election";
 
 const Index = () => {
-  return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-      <Hero />
-      <Features />
-      <Footer />
-    </div>
-  );
+  return <Election />;
 };
 
 export default Index;
