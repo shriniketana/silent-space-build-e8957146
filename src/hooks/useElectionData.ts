@@ -122,28 +122,30 @@ export const useElectionData = () => {
     try {
       console.log('Submitting votes:', votes);
       
-      // Generate a unique session ID for this voting session
-      const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      // Generate a simple unique session ID
+      const sessionId = `voter_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      console.log('Generated session ID:', sessionId);
       
-      // Submit all votes for this session
-      const votePromises = Object.entries(votes).map(([roleId, candidateId]) => 
-        supabase.from('votes').insert({
-          student_id: sessionId,
-          role_id: roleId,
-          candidate_id: candidateId
-        })
-      );
+      // Prepare vote records
+      const voteRecords = Object.entries(votes).map(([roleId, candidateId]) => ({
+        student_id: sessionId,
+        role_id: roleId,
+        candidate_id: candidateId
+      }));
 
-      const results = await Promise.all(votePromises);
-      
-      // Check for errors
-      const errors = results.filter(result => result.error);
-      if (errors.length > 0) {
-        console.error('Vote submission errors:', errors);
-        throw new Error(errors.map(e => e.error?.message).join(', '));
+      console.log('Vote records to insert:', voteRecords);
+
+      // Submit all votes
+      const { data, error } = await supabase
+        .from('votes')
+        .insert(voteRecords);
+
+      if (error) {
+        console.error('Vote submission error:', error);
+        throw error;
       }
 
-      console.log('Votes submitted successfully');
+      console.log('Votes submitted successfully:', data);
       toast({
         title: "Success",
         description: "Your votes have been submitted successfully!",
@@ -155,7 +157,7 @@ export const useElectionData = () => {
       console.error('Error submitting votes:', error);
       toast({
         title: "Error",
-        description: "Failed to submit votes. Please try again.",
+        description: `Failed to submit votes: ${error.message}`,
         variant: "destructive"
       });
       return false;
