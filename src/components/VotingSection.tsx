@@ -6,11 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useElectionData } from "@/hooks/useElectionData";
 
-interface VotingSectionProps {
-  studentId: string;
-}
-
-export const VotingSection = ({ studentId }: VotingSectionProps) => {
+export const VotingSection = () => {
   const { roles, settings, loading, submitVote } = useElectionData();
   const [votes, setVotes] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -26,8 +22,7 @@ export const VotingSection = ({ studentId }: VotingSectionProps) => {
 
     setIsSubmitting(true);
     
-    // Student ID is just for show, actual voting uses session-based IDs
-    const success = await submitVote(studentId, votes);
+    const success = await submitVote(votes);
     
     if (success) {
       // Generate confirmation code

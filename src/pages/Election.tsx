@@ -5,15 +5,12 @@ import { VotingSection } from "@/components/VotingSection";
 import { ResultsSection } from "@/components/ResultsSection";
 import { CountdownTimer } from "@/components/CountdownTimer";
 import { SecurityFooter } from "@/components/SecurityFooter";
-import { StudentLogin } from "@/components/StudentLogin";
 import { AdminPanel } from "@/components/AdminPanel";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Settings } from "lucide-react";
 
 const Election = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(true); // Start authenticated for voting
-  const [studentId, setStudentId] = useState("anonymous");
   const [activeTab, setActiveTab] = useState<"vote" | "results">("vote");
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [adminAuthenticated, setAdminAuthenticated] = useState(false);
@@ -22,11 +19,6 @@ const Election = () => {
 
   // Check if current user is admin
   const isAdmin = adminAuthenticated && adminEmail === "aniketh@optra.me";
-
-  const handleLogin = (id: string) => {
-    setStudentId(id);
-    setIsAuthenticated(true);
-  };
 
   const handleAdminLogin = () => {
     console.log('Admin login attempt:', { adminEmail, adminPassword });
@@ -77,7 +69,7 @@ const Election = () => {
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                Live Results
+                Results
               </button>
               
               {/* Admin Panel Access */}
@@ -106,7 +98,7 @@ const Election = () => {
         </div>
 
         {activeTab === "vote" ? (
-          <VotingSection studentId={studentId} />
+          <VotingSection />
         ) : (
           <ResultsSection />
         )}

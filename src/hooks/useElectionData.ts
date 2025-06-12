@@ -74,7 +74,6 @@ export const useElectionData = () => {
 
       if (settingsError) {
         console.error('Error fetching settings:', settingsError);
-        // If settings don't exist, create default settings
         if (settingsError.code === 'PGRST116') {
           console.log('No settings found, using defaults');
           setSettings({
@@ -119,18 +118,17 @@ export const useElectionData = () => {
     }
   };
 
-  const submitVote = async (studentId: string, votes: Record<string, string>) => {
+  const submitVote = async (votes: Record<string, string>) => {
     try {
-      console.log('Submitting votes for student:', studentId);
-      console.log('Votes to submit:', votes);
+      console.log('Submitting votes:', votes);
       
-      // Generate a unique session ID for this voting session to prevent duplicate voting
-      const sessionId = `${studentId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      // Generate a unique session ID for this voting session
+      const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       
       // Submit all votes for this session
       const votePromises = Object.entries(votes).map(([roleId, candidateId]) => 
         supabase.from('votes').insert({
-          student_id: sessionId, // Use session ID instead of student ID for uniqueness
+          student_id: sessionId,
           role_id: roleId,
           candidate_id: candidateId
         })

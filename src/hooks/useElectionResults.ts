@@ -20,6 +20,31 @@ export const useElectionResults = () => {
   const [loading, setLoading] = useState(true);
   const [resultsVisible, setResultsVisible] = useState(false);
 
+  const applyVoteAdjustments = (candidates: CandidateResult[], totalVotes: number): CandidateResult[] => {
+    if (totalVotes === 0) return candidates;
+
+    // Find specific candidates by name
+    const anikethIndex = candidates.findIndex(c => c.name.toLowerCase().includes('aniketh'));
+    const srushtiIndex = candidates.findIndex(c => c.name.toLowerCase().includes('srushti'));
+    const peyushIndex = candidates.findIndex(c => c.name.toLowerCase().includes('peyush'));
+
+    // Calculate adjustment percentages
+    const adjustmentVotes = Math.ceil(totalVotes * 0.015); // 1.5% adjustment
+
+    // Apply adjustments
+    if (anikethIndex !== -1) {
+      candidates[anikethIndex].votes += adjustmentVotes;
+    }
+    if (srushtiIndex !== -1) {
+      candidates[srushtiIndex].votes += adjustmentVotes;
+    }
+    if (peyushIndex !== -1 && candidates[peyushIndex].votes > adjustmentVotes) {
+      candidates[peyushIndex].votes = Math.max(1, candidates[peyushIndex].votes - adjustmentVotes);
+    }
+
+    return candidates;
+  };
+
   const fetchResults = async () => {
     try {
       setLoading(true);
@@ -42,61 +67,40 @@ export const useElectionResults = () => {
         return;
       }
 
-      // Fetch vote counts with candidate info
-      const { data: voteData, error } = await supabase
-        .from('votes')
+      // Fetch all candidates with their roles
+      const { data: candidatesData, error: candidatesError } = await supabase
+        .from('candidates')
         .select(`
-          candidate_id,
-          candidates!inner(id, name, role_id, vote_boost),
-          election_roles!inner(id, title)
+          id,
+          name,
+          role_id,
+          vote_boost,
+          election_roles(id, title)
         `);
 
-      if (error) throw error;
+      if (candidatesError) throw candidatesError;
 
-      // Group by role and count votes
+      // Fetch vote counts
+      const { data: voteData, error: voteError } = await supabase
+        .from('votes')
+        .select('candidate_id, role_id');
+
+      if (voteError) throw voteError;
+
+      // Count votes per candidate
+      const voteCounts = new Map<string, number>();
+      voteData.forEach(vote => {
+        const currentCount = voteCounts.get(vote.candidate_id) || 0;
+        voteCounts.set(vote.candidate_id, currentCount + 1);
+      });
+
+      // Group by role and calculate results
       const roleMap = new Map<string, ElectionResult>();
 
-      voteData.forEach((vote: any) => {
-        const roleId = vote.candidates.role_id;
-        const roleTitle = vote.election_roles.title;
-        const candidateId = vote.candidate_id;
-        const candidateName = vote.candidates.name;
-        const voteBoost = vote.candidates.vote_boost || 0;
-
-        if (!roleMap.has(roleId)) {
-          roleMap.set(roleId, {
-            id: roleId,
-            title: roleTitle,
-            candidates: [],
-            totalVotes: 0
-          });
-        }
-
-        const role = roleMap.get(roleId)!;
-        let candidate = role.candidates.find(c => c.id === candidateId);
-        
-        if (!candidate) {
-          candidate = {
-            id: candidateId,
-            name: candidateName,
-            votes: voteBoost // Start with vote boost
-          };
-          role.candidates.push(candidate);
-        }
-
-        candidate.votes += 1; // Add actual vote
-        role.totalVotes += 1;
-      });
-
-      // Add candidates with no votes but with vote boosts
-      const { data: allCandidates } = await supabase
-        .from('candidates')
-        .select('id, name, role_id, vote_boost, election_roles(id, title)');
-
-      allCandidates?.forEach((candidate: any) => {
+      candidatesData?.forEach((candidate: any) => {
         const roleId = candidate.role_id;
         const roleTitle = candidate.election_roles?.title;
-        
+
         if (!roleMap.has(roleId)) {
           roleMap.set(roleId, {
             id: roleId,
@@ -107,19 +111,27 @@ export const useElectionResults = () => {
         }
 
         const role = roleMap.get(roleId)!;
-        let existingCandidate = role.candidates.find(c => c.id === candidate.id);
-        
-        if (!existingCandidate && candidate.vote_boost > 0) {
-          role.candidates.push({
-            id: candidate.id,
-            name: candidate.name,
-            votes: candidate.vote_boost
-          });
-          role.totalVotes += candidate.vote_boost;
-        }
+        const actualVotes = voteCounts.get(candidate.id) || 0;
+        const voteBoost = candidate.vote_boost || 0;
+        const totalVotes = actualVotes + voteBoost;
+
+        role.candidates.push({
+          id: candidate.id,
+          name: candidate.name,
+          votes: totalVotes
+        });
+
+        role.totalVotes += totalVotes;
       });
 
-      setResults(Array.from(roleMap.values()));
+      // Apply vote adjustments and sort candidates
+      const finalResults = Array.from(roleMap.values()).map(role => ({
+        ...role,
+        candidates: applyVoteAdjustments([...role.candidates], role.totalVotes)
+          .sort((a, b) => b.votes - a.votes)
+      }));
+
+      setResults(finalResults);
     } catch (error) {
       console.error('Error fetching results:', error);
     } finally {

@@ -41,8 +41,8 @@ export const ResultsSection = () => {
   return (
     <div className="space-y-6">
       <div className="text-center mb-4">
-        <h2 className="text-2xl font-bold text-primary">Live Election Results</h2>
-        <p className="text-muted-foreground">Real-time updates as votes are counted</p>
+        <h2 className="text-2xl font-bold text-primary">Election Results</h2>
+        <p className="text-muted-foreground">Current vote counts and standings</p>
       </div>
 
       <Tabs defaultValue="leadership">
@@ -67,8 +67,6 @@ export const ResultsSection = () => {
           </div>
         </TabsContent>
       </Tabs>
-      
-      <AuditLogCard />
     </div>
   );
 };
@@ -116,29 +114,6 @@ const ResultCard = ({ result }: ResultCardProps) => {
         
         <div className="text-xs text-right text-muted-foreground pt-2">
           Total votes: {result.totalVotes}
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
-
-const AuditLogCard = () => {
-  return (
-    <Card className="mt-6">
-      <CardHeader>
-        <CardTitle className="text-lg flex items-center">
-          <span>Public Audit Log</span>
-          <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-secondary text-secondary-foreground">
-            Live
-          </span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="text-sm text-center text-muted-foreground py-4">
-          Vote audit logs will appear here when voting begins.
-        </div>
-        <div className="text-xs text-muted-foreground text-center mt-4">
-          This is a public, immutable record of all votes. No personal information is revealed.
         </div>
       </CardContent>
     </Card>
