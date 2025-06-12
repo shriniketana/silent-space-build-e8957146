@@ -126,16 +126,16 @@ export const useElectionData = () => {
       const sessionId = `voter_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
       console.log('Generated session ID:', sessionId);
       
-      // Prepare vote records
+      // Prepare vote records without student_id foreign key constraint
       const voteRecords = Object.entries(votes).map(([roleId, candidateId]) => ({
-        student_id: sessionId,
+        student_id: sessionId, // This will be stored as text, not referencing students table
         role_id: roleId,
         candidate_id: candidateId
       }));
 
       console.log('Vote records to insert:', voteRecords);
 
-      // Submit all votes
+      // Submit all votes directly without foreign key constraints
       const { data, error } = await supabase
         .from('votes')
         .insert(voteRecords);
