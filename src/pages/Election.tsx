@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Header } from "@/components/Header";
 import { VotingSection } from "@/components/VotingSection";
 import { ResultsSection } from "@/components/ResultsSection";
@@ -12,8 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Settings } from "lucide-react";
 
 const Election = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [studentId, setStudentId] = useState("");
+  const [isAuthenticated, setIsAuthenticated] = useState(true); // Start authenticated for voting
+  const [studentId, setStudentId] = useState("anonymous");
   const [activeTab, setActiveTab] = useState<"vote" | "results">("vote");
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [adminAuthenticated, setAdminAuthenticated] = useState(false);
@@ -42,64 +42,6 @@ const Election = () => {
   };
 
   const electionEndDate = new Date("2025-12-31T23:59:59");
-
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <main className="container mx-auto px-4 py-8">
-          <div className="max-w-2xl mx-auto">
-            <div className="text-center mb-8">
-              <h1 className="text-3xl md:text-4xl font-bold text-primary mb-4">
-                Student Council Elections 2025
-              </h1>
-              <p className="text-lg text-muted-foreground mb-6">
-                Narayana Educational Institutions - BLR HSR Campus
-              </p>
-              <CountdownTimer endDate={electionEndDate} />
-            </div>
-            
-            <Card className="election-card">
-              <CardContent className="p-6">
-                <h2 className="text-2xl font-bold text-center mb-6">Student Authentication</h2>
-                <StudentLogin onLogin={handleLogin} />
-                
-                {/* Admin Login Section */}
-                <div className="mt-6 p-4 border-t border-dashed">
-                  <div className="text-center space-y-3">
-                    <div className="text-sm text-muted-foreground">Admin Access</div>
-                    <div className="space-y-2">
-                      <input
-                        type="email"
-                        placeholder="Admin email"
-                        value={adminEmail}
-                        onChange={(e) => setAdminEmail(e.target.value)}
-                        className="w-full px-3 py-2 border rounded"
-                      />
-                      <div className="flex gap-2">
-                        <input
-                          type="password"
-                          placeholder="Admin password"
-                          value={adminPassword}
-                          onChange={(e) => setAdminPassword(e.target.value)}
-                          className="flex-1 px-3 py-2 border rounded"
-                          onKeyPress={(e) => e.key === 'Enter' && handleAdminLogin()}
-                        />
-                        <Button onClick={handleAdminLogin} size="sm">
-                          <Settings className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </main>
-        <SecurityFooter />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -138,15 +80,27 @@ const Election = () => {
                 Live Results
               </button>
               
-              {/* Admin Button */}
-              {isAdmin && (
-                <button
-                  onClick={() => setShowAdminPanel(true)}
-                  className="px-4 py-2 rounded-md font-medium transition-all text-muted-foreground hover:text-foreground"
-                >
+              {/* Admin Panel Access */}
+              <div className="flex items-center space-x-2 ml-4">
+                <input
+                  type="email"
+                  placeholder="Admin email"
+                  value={adminEmail}
+                  onChange={(e) => setAdminEmail(e.target.value)}
+                  className="px-3 py-1 border rounded text-sm"
+                />
+                <input
+                  type="password"
+                  placeholder="Password"
+                  value={adminPassword}
+                  onChange={(e) => setAdminPassword(e.target.value)}
+                  className="px-3 py-1 border rounded text-sm"
+                  onKeyPress={(e) => e.key === 'Enter' && handleAdminLogin()}
+                />
+                <Button onClick={handleAdminLogin} size="sm">
                   <Settings className="h-4 w-4" />
-                </button>
-              )}
+                </Button>
+              </div>
             </div>
           </div>
         </div>

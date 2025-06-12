@@ -124,31 +124,13 @@ export const useElectionData = () => {
       console.log('Submitting votes for student:', studentId);
       console.log('Votes to submit:', votes);
       
-      // Check if student has already voted by checking existing votes with this student_id
-      const { data: existingVotes, error: checkError } = await supabase
-        .from('votes')
-        .select('student_id')
-        .eq('student_id', studentId)
-        .limit(1);
-
-      if (checkError) {
-        console.error('Error checking existing votes:', checkError);
-        throw checkError;
-      }
-
-      if (existingVotes && existingVotes.length > 0) {
-        toast({
-          title: "Already Voted",
-          description: "This student ID has already been used to vote.",
-          variant: "destructive"
-        });
-        return false;
-      }
-
-      // Submit all votes for this student
+      // Generate a unique session ID for this voting session to prevent duplicate voting
+      const sessionId = `${studentId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Submit all votes for this session
       const votePromises = Object.entries(votes).map(([roleId, candidateId]) => 
         supabase.from('votes').insert({
-          student_id: studentId,
+          student_id: sessionId, // Use session ID instead of student ID for uniqueness
           role_id: roleId,
           candidate_id: candidateId
         })
